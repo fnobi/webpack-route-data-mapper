@@ -4,5 +4,10 @@
   "main": "index.js",
   "repository": "https://github.com/fnobi/webpack-route-data-mapper",
   "author": "nobii <fujisawa-shin@kayac.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^7.1.2",
+    "html-webpack-plugin": "^3.2.0",
+    "lodash": "^4.17.10"
+  }
 }
