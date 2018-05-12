@@ -36,13 +36,9 @@ function simpleProduction(template) {
 }
 
 module.exports = function routeDataMapper({
-    pattern,
-    baseDir,
-    routes = {},
-    locals = {},
-    data = {},
+    src, baseDir, routes = {}, locals = {}, data = {},
 }) {
-    return _(glob.sync(pattern, { cwd: baseDir }))
+    return _(glob.sync(src, { cwd: baseDir }))
         .map((template) => {
             const matchingPathName = _(routes)
                 .keys()

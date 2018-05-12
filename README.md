@@ -22,7 +22,7 @@ module.exports = {
   plugins: [
     routeDataMapper({
         baseDir: `./src/pug/page`,
-        pattern: '**/[!_]*.pug',
+        src: '**/[!_]*.pug',
         // template base locals data
         locals: {
           url: 'example site'
