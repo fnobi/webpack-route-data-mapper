@@ -6,10 +6,10 @@ const path = require('path');
 const ID_REGEXP = /:([a-zA-Z0-9_]+)/;
 
 // 'hoge' => { hoge: {} }
-function singleKeyObject(key) {
+function singleKeyObject(key, data = {}) {
     return _([key])
         .invert()
-        .mapValues(_.constant({}))
+        .mapValues(_.constant(data))
         .value();
 }
 
@@ -18,15 +18,25 @@ function completeHtmlPath(pathName) {
     return /\.html$/.test(pathName) ? pathName : path.join(pathName, 'index.html');
 }
 
-function massProduction(destPath, data) {
-    const idMatch = destPath.match(ID_REGEXP);
-    // TODO: 複数回ID_REGEXPにマッチするようなケース
-    const rowForPathName = idMatch
-        ? _(data[idMatch[1]] || {})
-            .mapKeys((row, id) => destPath.replace(ID_REGEXP, id))
-            .value()
-        : singleKeyObject(destPath);
-    return _.mapKeys(rowForPathName, (row, pathName) => completeHtmlPath(pathName));
+function massProduction(base, data) {
+    const result = _.map(base, (baseData, destPath) => {
+        const idMatch = destPath.match(ID_REGEXP);
+        let rowForPathName;
+        if (idMatch) {
+            const key = idMatch[1];
+            rowForPathName = _(data[key] || {})
+                .mapKeys((row, id) => destPath.replace(ID_REGEXP, id))
+                .mapValues((row) => Object.assign({}, baseData, singleKeyObject(key, row)))
+                .value();
+        } else {
+            rowForPathName = singleKeyObject(destPath);
+        }
+        return _.mapKeys(rowForPathName, (row, pathName) => completeHtmlPath(pathName));
+    });
+    const rowForPathName = _.merge.apply(this, result);
+    return _.some(rowForPathName, (row, pathName) => ID_REGEXP.test(pathName))
+        ? massProduction(rowForPathName, data)
+        : rowForPathName;
 }
 
 function simpleProduction(template) {
@@ -45,20 +55,25 @@ module.exports = function routeDataMapper({
                 .find((pathName) => routes[pathName] === template);
 
             const rowForPathName = matchingPathName
-                ? massProduction(matchingPathName, data)
+                ? massProduction(singleKeyObject(matchingPathName), data)
                 : simpleProduction(template);
 
-            return _.map(
-                rowForPathName,
-                (row, pathName) =>
-                    new HTMLWebpackPlugin({
-                        template: path.join(baseDir, template),
-                        filename: pathName.replace(/^\//, ''),
-                        title: false,
-                        hash: true,
-                        templateParameters: Object.assign({}, locals, row),
-                    }),
-            );
+            return _.map(rowForPathName, (row, pathName) => {
+                const filename = pathName.replace(/^\//, '');
+                return new HTMLWebpackPlugin({
+                    template: path.join(baseDir, template),
+                    filename,
+                    title: false,
+                    hash: true,
+                    templateParameters: Object.assign(
+                        {
+                            $route: filename,
+                        },
+                        locals,
+                        row,
+                    ),
+                });
+            });
         })
         .flatten()
         .value();
