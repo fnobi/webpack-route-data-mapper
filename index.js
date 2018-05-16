@@ -46,7 +46,12 @@ function simpleProduction(template) {
 }
 
 module.exports = function routeDataMapper({
-    src, baseDir, routes = {}, locals = {}, data = {},
+    src,
+    baseDir,
+    routes = {},
+    locals = {},
+    data = {},
+    options = {},
 }) {
     return _(glob.sync(src, { cwd: baseDir }))
         .map((template) => {
@@ -60,11 +65,9 @@ module.exports = function routeDataMapper({
 
             return _.map(rowForPathName, (row, pathName) => {
                 const filename = pathName.replace(/^\//, '');
-                return new HTMLWebpackPlugin({
+                return new HTMLWebpackPlugin(Object.assign({}, options, {
                     template: path.join(baseDir, template),
                     filename,
-                    title: false,
-                    hash: true,
                     templateParameters: Object.assign(
                         {
                             $route: filename,
@@ -72,7 +75,7 @@ module.exports = function routeDataMapper({
                         locals,
                         row,
                     ),
-                });
+                }));
             });
         })
         .flatten()
