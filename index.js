@@ -47,13 +47,16 @@ function simpleProduction(template) {
 
 module.exports = function routeDataMapper({
     src,
+    exclude,
     baseDir,
     routes = {},
     locals = {},
     data = {},
     options = {},
 }) {
-    return _(glob.sync(src, { cwd: baseDir }))
+    const files = src ? glob.sync(src, { cwd: baseDir }) : [];
+    const excludeFiles = exclude ? glob.sync(exclude, { cwd: baseDir }) : [];
+    return _(_.difference(files, excludeFiles))
         .map((template) => {
             const matchingPathName = _(routes)
                 .keys()
