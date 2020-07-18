@@ -1,6 +1,6 @@
 {
   "name": "webpack-route-data-mapper",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "main": "index.js",
   "repository": "https://github.com/fnobi/webpack-route-data-mapper",
   "author": "nobii <fujisawa-shin@kayac.com>",
